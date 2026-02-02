@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
       port: port,
       host: '0.0.0.0',
       strictPort: true,
+      allowedHosts: ['orqiocrm.up.railway.app', '.railway.app'],
     },
     plugins: [react()],
     define: {
