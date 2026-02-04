@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, LayoutGrid, BarChart3, LogOut } from 'lucide-react';
+import { Plus, Search, LayoutGrid, BarChart3, LogOut, Bot } from 'lucide-react';
 import { useLeadStore } from './store';
 import { Lead } from './types';
 import { Button, Input } from './components/ui/Glass';
 import { LeadModal } from './components/LeadModal';
 import { KanbanBoard } from './components/KanbanBoard';
 import { Dashboard } from './components/Dashboard';
+import { DashboardIA } from './src/dashboard-ia/DashboardIA';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginPage } from './components/auth/LoginPage';
 
@@ -13,7 +14,13 @@ function MainApp() {
   const { user, signOut } = useAuth();
   const { leads, addLead, updateLead, addNote, deleteLead } = useLeadStore();
 
-  const [currentView, setCurrentView] = useState<'kanban' | 'dashboard'>('kanban');
+  const [currentView, setCurrentView] = useState<'kanban' | 'dashboard' | 'dashboard-ia'>(() => {
+    return (localStorage.getItem('app_current_view') as 'kanban' | 'dashboard' | 'dashboard-ia') || 'kanban';
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('app_current_view', currentView);
+  }, [currentView]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [search, setSearch] = useState('');
@@ -69,6 +76,13 @@ function MainApp() {
             >
               <BarChart3 size={20} />
             </button>
+            <button
+              onClick={() => setCurrentView('dashboard-ia')}
+              className={`p-2 rounded-lg transition-all ${currentView === 'dashboard-ia' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+              title="Agente IA"
+            >
+              <Bot size={20} />
+            </button>
           </div>
 
           <div className="relative w-full max-w-xs group hidden sm:block">
@@ -103,8 +117,10 @@ function MainApp() {
             leads={filteredLeads}
             onLeadClick={(lead) => { setEditingLead(lead); setModalOpen(true); }}
           />
-        ) : (
+        ) : currentView === 'dashboard' ? (
           <Dashboard />
+        ) : (
+          <DashboardIA />
         )}
       </main>
 
