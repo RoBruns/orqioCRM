@@ -49,7 +49,8 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onClick }) => {
     data: {
       type: "Lead",
       lead
-    }
+    },
+    disabled: lead.isOptimistic // Disable drag for optimistic items
   });
 
   const style = {
@@ -69,17 +70,24 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onClick }) => {
       style={style}
       {...attributes}
       {...listeners}
-      className="touch-none outline-none"
+      className={`touch-none outline-none ${lead.isOptimistic ? 'cursor-wait opacity-70' : ''}`}
     >
       <GlassPane
         intensity="low"
-        hoverEffect
-        onClick={onClick}
-        className="p-4 rounded-2xl mb-3 cursor-grab active:cursor-grabbing group relative"
+        hoverEffect={!lead.isOptimistic}
+        onClick={lead.isOptimistic ? undefined : onClick}
+        className={`p-4 rounded-2xl mb-3 group relative ${lead.isOptimistic ? 'border-orqio-orange/50 border-dashed' : 'cursor-grab active:cursor-grabbing'}`}
       >
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-bold text-gray-900 leading-tight">{lead.name}</h3>
-          {lead.nextAction && (
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-gray-900 leading-tight">{lead.name}</h3>
+            {lead.isOptimistic && (
+              <span className="text-[10px] bg-orqio-orange/10 text-orqio-orange px-1.5 py-0.5 rounded animate-pulse">
+                Salvando...
+              </span>
+            )}
+          </div>
+          {lead.nextAction && !lead.isOptimistic && (
             <div className="w-2 h-2 rounded-full bg-orqio-orange animate-pulse" title={`Próxima ação: ${lead.nextAction}`} />
           )}
         </div>

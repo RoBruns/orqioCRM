@@ -23,7 +23,7 @@ export interface Lead {
   email: string;
   status: LeadStatus;
   createdAt: string;
-  
+
   // Optional
   responsibleName?: string;
   responsiblePhone?: string;
@@ -31,8 +31,11 @@ export interface Lead {
   owner?: string; // Internal user responsible
   lastInteraction?: string;
   nextAction?: string;
-  
+
   notes: Note[];
+
+  // UI Only
+  isOptimistic?: boolean;
 }
 
 export const COLUMNS: { id: LeadStatus; label: string; color: string }[] = [

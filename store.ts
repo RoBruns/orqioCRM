@@ -138,6 +138,7 @@ export const useLeadStore = () => {
       origin: dbData.origin,
       owner: user.id || 'me',
       lastInteraction: new Date().toISOString(),
+      isOptimistic: true,
       notes: initialNote ? [{
         id: 'temp-note',
         content: initialNote,
@@ -159,6 +160,8 @@ export const useLeadStore = () => {
         owner: user.id,
         origin: dbData.origin,
         responsible_name: dbData.responsibleName,
+        responsible_phone: dbData.responsiblePhone,
+        next_action: dbData.nextAction, // Ensuring this is also sent if present
       }])
       .select()
       .single();
@@ -182,7 +185,14 @@ export const useLeadStore = () => {
 
     // Replace temp lead with real lead (optional, or let subscription handle it)
     // Actually, subscription is safest, but we can update ID locally to avoid glitches if subscription is slow
-    setLeads(prev => prev.map(l => l.id === tempId ? { ...l, id: newLead.id } : l));
+    setLeads(prev => prev.map(l => {
+      if (l.id === tempId) {
+        // Create a new object for the lead with the real ID and NO isOptimistic flag
+        const { isOptimistic, ...rest } = l;
+        return { ...rest, id: newLead.id };
+      }
+      return l;
+    }));
 
   }, [user]);
 
@@ -198,6 +208,7 @@ export const useLeadStore = () => {
     if (updates.email) dbUpdates.email = updates.email;
     if (updates.status) dbUpdates.status = updates.status;
     if (updates.responsibleName) dbUpdates.responsible_name = updates.responsibleName;
+    if (updates.responsiblePhone) dbUpdates.responsible_phone = updates.responsiblePhone;
     if (updates.lastInteraction) dbUpdates.last_interaction = updates.lastInteraction;
     if (updates.nextAction) dbUpdates.next_action = updates.nextAction;
 
