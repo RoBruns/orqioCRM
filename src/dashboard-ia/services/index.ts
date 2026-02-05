@@ -1,5 +1,6 @@
 import { supabase } from '../../../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { SignJWT } from 'jose';
 import { DashboardLead, DashboardSchedule, DashboardMetric, LeadStage } from '../types';
 
 // SERVICE IMPLEMENTATIONS
@@ -107,9 +108,42 @@ export const MetricsService = {
 
 export const KnowledgeBaseService = {
     uploadFile: async (file: File): Promise<{ success: boolean; message: string }> => {
-        console.log('Uploading file to AI Agent Knowledge Base:', file.name);
-        // Needs Storage bucket setup. For now keeping mock to avoid breaking if bucket doesn't exist.
-        return new Promise((resolve) => setTimeout(() => resolve({ success: true, message: 'Arquivo processado pelo agente (Simulado).' }), 1500));
+        try {
+            const secretKey = import.meta.env.VITE_KB_WEBHOOK_SECRET;
+            const webhookUrl = import.meta.env.VITE_KB_WEBHOOK_URL;
+
+            if (!secretKey || !webhookUrl) {
+                console.error('Missing webhook configuration');
+                return { success: false, message: 'Erro de configuração do sistema.' };
+            }
+
+            const secret = new TextEncoder().encode(secretKey);
+            const jwt = await new SignJWT({ 'urn:example:claim': true })
+                .setProtectedHeader({ alg: 'HS256' })
+                .setIssuedAt()
+                .setExpirationTime('5m')
+                .sign(secret);
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${jwt}`
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Upload failed with status: ${response.status}`);
+            }
+
+            return { success: true, message: 'Arquivo enviado com sucesso para o agente.' };
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            return { success: false, message: 'Erro ao enviar arquivo.' };
+        }
     }
 };
 

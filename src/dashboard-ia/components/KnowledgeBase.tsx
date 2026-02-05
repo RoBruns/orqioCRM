@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GlassPane, Button, Input } from '../../../components/ui/Glass';
 import { KnowledgeBaseService } from '../services';
-import { Upload, FileText, Check, AlertCircle } from 'lucide-react';
+import { Upload, FileText, Check, AlertCircle, X } from 'lucide-react';
 
 export const KnowledgeBase: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
@@ -43,16 +43,37 @@ export const KnowledgeBase: React.FC = () => {
             </div>
 
             <div className="flex-1 flex flex-col justify-center gap-4">
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-white/40 transition-colors cursor-pointer relative">
-                    <input
-                        type="file"
-                        onChange={handleFileChange}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    />
-                    <Upload className="text-gray-400 mb-3" size={32} />
-                    <p className="text-gray-600 font-medium">{file ? file.name : "Clique para selecionar um arquivo"}</p>
-                    <p className="text-xs text-gray-400 mt-1">PDF, DOCX, TXT até 10MB</p>
-                </div>
+                {!file ? (
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-white/40 transition-colors cursor-pointer relative">
+                        <input
+                            type="file"
+                            onChange={handleFileChange}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <Upload className="text-gray-400 mb-3" size={32} />
+                        <p className="text-gray-600 font-medium">Clique para selecionar um arquivo</p>
+                        <p className="text-xs text-gray-400 mt-1">PDF, DOCX, TXT até 10MB</p>
+                    </div>
+                ) : (
+                    <div className="border-2 border-solid border-indigo-200 bg-indigo-50/50 rounded-xl p-6 flex items-center justify-between">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            <div className="p-2 bg-white rounded-lg text-indigo-600 shadow-sm">
+                                <FileText size={24} />
+                            </div>
+                            <div className="flex flex-col overflow-hidden">
+                                <p className="text-gray-800 font-medium truncate">{file.name}</p>
+                                <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(1)} KB</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setFile(null)}
+                            className="p-2 hover:bg-red-100 text-gray-400 hover:text-red-600 rounded-lg transition-colors"
+                            title="Cancelar seleção"
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
+                )}
 
                 {status === 'success' && (
                     <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg text-sm">
