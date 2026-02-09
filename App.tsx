@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, LayoutGrid, BarChart3, LogOut, Bot } from 'lucide-react';
+import { Plus, Search, LayoutGrid, BarChart3, LogOut, Bot, FileText } from 'lucide-react';
 import { useLeadStore } from './store';
 import { Lead } from './types';
 import { Button, Input } from './components/ui/Glass';
@@ -7,6 +7,7 @@ import { LeadModal } from './components/LeadModal';
 import { KanbanBoard } from './components/KanbanBoard';
 import { Dashboard } from './components/Dashboard';
 import { DashboardIA } from './src/dashboard-ia/DashboardIA';
+import { ScriptsPage } from './components/ScriptsPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginPage } from './components/auth/LoginPage';
 
@@ -14,8 +15,8 @@ function MainApp() {
   const { user, signOut } = useAuth();
   const { leads, addLead, updateLead, addNote, deleteLead } = useLeadStore();
 
-  const [currentView, setCurrentView] = useState<'kanban' | 'dashboard' | 'dashboard-ia'>(() => {
-    return (localStorage.getItem('app_current_view') as 'kanban' | 'dashboard' | 'dashboard-ia') || 'kanban';
+  const [currentView, setCurrentView] = useState<'kanban' | 'dashboard' | 'dashboard-ia' | 'scripts'>(() => {
+    return (localStorage.getItem('app_current_view') as 'kanban' | 'dashboard' | 'dashboard-ia' | 'scripts') || 'kanban';
   });
 
   React.useEffect(() => {
@@ -76,6 +77,14 @@ function MainApp() {
             >
               <BarChart3 size={20} />
             </button>
+            <div className="w-px h-6 bg-gray-300/50 mx-1 self-center"></div>
+            <button
+              onClick={() => setCurrentView('scripts')}
+              className={`p-2 rounded-lg transition-all ${currentView === 'scripts' ? 'bg-white shadow-sm text-orqio-orange' : 'text-gray-500 hover:text-gray-700'}`}
+              title="Scripts de Vendas"
+            >
+              <FileText size={20} />
+            </button>
             <button
               onClick={() => setCurrentView('dashboard-ia')}
               className={`p-2 rounded-lg transition-all ${currentView === 'dashboard-ia' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
@@ -92,7 +101,7 @@ function MainApp() {
               className="pl-10 bg-white/40 border-transparent hover:bg-white/60 focus:bg-white"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              disabled={currentView === 'dashboard'} // Disable search in dashboard
+              disabled={currentView === 'dashboard' || currentView === 'scripts'} // Disable search in dashboard/scripts
             />
           </div>
 
@@ -119,6 +128,8 @@ function MainApp() {
           />
         ) : currentView === 'dashboard' ? (
           <Dashboard />
+        ) : currentView === 'scripts' ? (
+          <ScriptsPage />
         ) : (
           <DashboardIA />
         )}
