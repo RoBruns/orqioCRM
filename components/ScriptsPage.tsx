@@ -168,6 +168,7 @@ export const ScriptsPage: React.FC = () => {
                         <div className="flex-1 overflow-y-auto p-6">
                             {isEditing ? (
                                 <ScriptVisualEditor
+                                    key={selectedScript.id}
                                     initialContent={editContent}
                                     onChange={setEditContent}
                                 />
