@@ -337,7 +337,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ leads, onLeadClick }) 
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="flex-1 overflow-x-auto overflow-y-hidden">
+      <div className="flex-1 overflow-auto">
         <div className="h-full flex px-6 gap-4 pb-4 min-w-max">
           {COLUMNS.map(col => (
             <KanbanColumn
