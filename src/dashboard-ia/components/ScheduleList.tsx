@@ -8,7 +8,11 @@ export const ScheduleList: React.FC = () => {
     const [schedules, setSchedules] = useState<DashboardSchedule[]>([]);
 
     useEffect(() => {
-        ScheduleService.getSchedules().then(setSchedules);
+        ScheduleService.getSchedules().then((all) => {
+            const now = new Date();
+            const upcoming = all.filter(s => new Date(s.date) >= now);
+            setSchedules(upcoming);
+        });
     }, []);
 
     return (

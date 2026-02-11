@@ -152,10 +152,32 @@ export const MetricsService = {
         const { count: activeIA } = await supabase.from('chats').select('*', { count: 'exact', head: true }).eq('IA', true);
         const { count: activeHuman } = await supabase.from('chats').select('*', { count: 'exact', head: true }).or('IA.is.null,IA.eq.false');
 
+        // Conversão: leads com status "agendado" ou "ganho"
+        const { count: convertedLeads } = await supabase
+            .from('chats')
+            .select('*', { count: 'exact', head: true })
+            .or('status.ilike.%agendad%,status.ilike.%ganh%');
+
+        // Agendamento: clientes únicos que possuem pelo menos 1 agendamento
+        const { data: scheduledClients } = await supabase
+            .from('agendamentos')
+            .select('cliente_id');
+        const uniqueScheduledClients = new Set(
+            (scheduledClients || []).map((s: any) => s.cliente_id).filter(Boolean)
+        ).size;
+
+        const total = totalLeads || 0;
+        const conversionRate = total > 0
+            ? parseFloat(((convertedLeads || 0) / total * 100).toFixed(1))
+            : 0;
+        const scheduleRate = total > 0
+            ? parseFloat((uniqueScheduledClients / total * 100).toFixed(1))
+            : 0;
+
         return {
-            conversionRate: 15.5,
-            scheduleRate: 28.3,
-            totalLeads: totalLeads || 0,
+            conversionRate,
+            scheduleRate,
+            totalLeads: total,
             totalScheduled: totalScheduled || 0,
             activeIA: activeIA || 0,
             activeHuman: activeHuman || 0
