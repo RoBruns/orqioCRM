@@ -188,7 +188,7 @@ export const AgentSchedules: React.FC = () => {
                                 </div>
 
                                 <div className="mt-4 flex gap-2">
-                                    <Button variant="secondary" className="w-full text-xs py-1 h-8">Reprogramar</Button>
+
                                     <Button
                                         className="w-full text-xs py-1 h-8"
                                         onClick={() => setSelectedSchedule(schedule)}
