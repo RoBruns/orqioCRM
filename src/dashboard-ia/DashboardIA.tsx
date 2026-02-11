@@ -3,6 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { AgentDashboard } from './components/AgentDashboard';
 import { AgentKanban } from './components/AgentKanban';
 import { AgentSchedules } from './components/AgentSchedules';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export const DashboardIA: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'dashboard' | 'kanban' | 'schedules'>(() => {
@@ -21,9 +22,44 @@ export const DashboardIA: React.FC = () => {
                 {/* Mobile Header Placeholder (if needed later) */}
 
                 <div className="flex-1 overflow-hidden p-2">
-                    {activeTab === 'dashboard' && <AgentDashboard />}
-                    {activeTab === 'kanban' && <AgentKanban />}
-                    {activeTab === 'schedules' && <AgentSchedules />}
+                    <AnimatePresence mode="wait">
+                        {activeTab === 'dashboard' && (
+                            <motion.div
+                                key="dashboard"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                transition={{ duration: 0.2 }}
+                                className="h-full"
+                            >
+                                <AgentDashboard />
+                            </motion.div>
+                        )}
+                        {activeTab === 'kanban' && (
+                            <motion.div
+                                key="kanban"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                transition={{ duration: 0.2 }}
+                                className="h-full"
+                            >
+                                <AgentKanban />
+                            </motion.div>
+                        )}
+                        {activeTab === 'schedules' && (
+                            <motion.div
+                                key="schedules"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                transition={{ duration: 0.2 }}
+                                className="h-full"
+                            >
+                                <AgentSchedules />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </div>

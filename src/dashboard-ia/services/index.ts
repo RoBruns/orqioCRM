@@ -28,6 +28,38 @@ export const LeadService = {
         }));
     },
 
+    createLead: async (lead: {
+        name: string;
+        email: string;
+        remoteJid: string;
+        ia: boolean;
+        status: string;
+    }): Promise<{ success: boolean; id?: string; error?: string }> => {
+        // Format remoteJid: ensure 55 prefix and @s.whatsapp.net suffix
+        const digits = lead.remoteJid.replace(/\D/g, '');
+        const withPrefix = digits.startsWith('55') ? digits : `55${digits}`;
+        const formattedJid = `${withPrefix}@s.whatsapp.net`;
+
+        const { data, error } = await supabase
+            .from('chats')
+            .insert({
+                name: lead.name,
+                email: lead.email || null,
+                remotejID: formattedJid,
+                IA: lead.ia,
+                status: lead.status
+            })
+            .select('id')
+            .single();
+
+        if (error) {
+            console.error('Error creating lead:', error);
+            return { success: false, error: error.message };
+        }
+
+        return { success: true, id: data.id.toString() };
+    },
+
     subscribeToLeads: (callback: () => void): RealtimeChannel => {
         return supabase
             .channel('public:chats')
@@ -44,21 +76,18 @@ export const LeadService = {
 
 export const ScheduleService = {
     getSchedules: async (): Promise<DashboardSchedule[]> => {
-        // Join with chats to get lead name if possible, or just fetch agendamentos
-        // Assuming cliente_id maps to chats.id? Or is it separate?
-        // For now simple fetch.
         const { data, error } = await supabase
             .from('agendamentos')
             .select('id, cliente_id, horario_inicio, servico, created_at')
             .order('horario_inicio', { ascending: false })
-            .limit(20);
+            .limit(50);
 
         if (error) {
             console.error('Error fetching schedules:', error);
             return [];
         }
 
-        // We need names. Let's try to fetch chat names for these client_ids
+        // Fetch lead names for client_ids
         const clientIds = data.map((d: any) => d.cliente_id).filter(Boolean);
         let namesMap: Record<string, string> = {};
 
@@ -69,7 +98,7 @@ export const ScheduleService = {
                 .in('id', clientIds);
 
             if (clients) {
-                clients.forEach((c: any) => namesMap[c.id] = c.name);
+                clients.forEach((c: any) => namesMap[c.id] = c.name || 'Sem Nome');
             }
         }
 
@@ -78,23 +107,51 @@ export const ScheduleService = {
             leadId: s.cliente_id?.toString() || '0',
             leadName: namesMap[s.cliente_id] || `Cliente ${s.cliente_id}`,
             date: s.horario_inicio,
-            status: 'confirmed', // Assuming if it exists, it's confirmed
+            status: 'confirmed' as const,
+            servico: s.servico || 'Não especificado',
             notes: s.servico
         }));
+    },
+
+    createSchedule: async (schedule: {
+        id_cliente: string;
+        horario_inicio: string;
+        servico: string;
+    }): Promise<{ success: boolean; error?: string }> => {
+        try {
+            const response = await fetch(
+                'https://primary-production-599df.up.railway.app/webhook/agendamento',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_cliente: schedule.id_cliente,
+                        horario_inicio: schedule.horario_inicio,
+                        servico: schedule.servico
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`Webhook responded with status ${response.status}`);
+            }
+
+            return { success: true };
+        } catch (error: any) {
+            console.error('Error creating schedule:', error);
+            return { success: false, error: error.message };
+        }
     }
 };
 
 export const MetricsService = {
     getMetrics: async (): Promise<DashboardMetric> => {
-        // Real counts
         const { count: totalLeads } = await supabase.from('chats').select('*', { count: 'exact', head: true });
         const { count: totalScheduled } = await supabase.from('agendamentos').select('*', { count: 'exact', head: true });
 
-        // Count interactions
         const { count: activeIA } = await supabase.from('chats').select('*', { count: 'exact', head: true }).eq('IA', true);
         const { count: activeHuman } = await supabase.from('chats').select('*', { count: 'exact', head: true }).or('IA.is.null,IA.eq.false');
 
-        // Mock rates for now as we don't have enough history/event tracking for rates
         return {
             conversionRate: 15.5,
             scheduleRate: 28.3,
@@ -147,6 +204,27 @@ export const KnowledgeBaseService = {
     }
 };
 
+export const EmailService = {
+    sendConfirmation: async (agendamentoId: string): Promise<{ success: boolean; message: string }> => {
+        try {
+            const response = await fetch(
+                'https://swmjozexpzszbyqqgnzr.supabase.co/functions/v1/send-confirmation-email',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ agendamento_id: parseInt(agendamentoId) })
+                }
+            );
+
+            const data = await response.json();
+            return { success: data.success, message: data.message };
+        } catch (error: any) {
+            console.error('Error sending confirmation email:', error);
+            return { success: false, message: error.message || 'Erro ao enviar e-mail' };
+        }
+    }
+};
+
 // HELPERS
 function mapStatusToStage(status: string | null): LeadStage {
     if (!status) return 'primeiro_contato';
@@ -155,6 +233,6 @@ function mapStatusToStage(status: string | null): LeadStage {
     if (s.includes('cancel')) return 'cancelamento';
     if (s.includes('agendad')) return 'agendado';
     if (s.includes('desqualific')) return 'desqualificado';
-    if (s.includes('ganh')) return 'agendado'; // Win = scheduled/sold?
+    if (s.includes('ganh')) return 'agendado';
     return 'primeiro_contato';
 }

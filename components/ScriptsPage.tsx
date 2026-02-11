@@ -4,6 +4,7 @@ import { ScriptVisualEditor } from './scripts/ScriptVisualEditor';
 import { GlassPane, Button } from './ui/Glass';
 import { Edit3, Save, X, FileText, ChevronRight, Phone, MessageSquare } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface Script {
     id: string;
@@ -103,11 +104,14 @@ export const ScriptsPage: React.FC = () => {
                 </div>
 
                 <nav className="space-y-2 flex-1 overflow-y-auto">
-                    {scripts.map((script) => {
+                    {scripts.map((script, index) => {
                         const isActive = selectedScript?.id === script.id;
                         return (
-                            <button
+                            <motion.button
                                 key={script.id}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: index * 0.05 }}
                                 onClick={() => setSelectedScript(script)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium text-left ${isActive
                                     ? 'bg-orange-50 text-orqio-orange shadow-sm'
@@ -117,7 +121,7 @@ export const ScriptsPage: React.FC = () => {
                                 <FileText size={18} className={isActive ? 'text-orqio-orange' : 'text-gray-400'} />
                                 <span className="truncate flex-1">{script.title}</span>
                                 {isActive && <ChevronRight size={16} className="text-orqio-orange" />}
-                            </button>
+                            </motion.button>
                         );
                     })}
                 </nav>
@@ -130,61 +134,80 @@ export const ScriptsPage: React.FC = () => {
 
             {/* Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                {selectedScript ? (
-                    <GlassPane className="flex-1 rounded-2xl flex flex-col overflow-hidden">
-                        {/* Header */}
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-orqio-orange/10 rounded-lg text-orqio-orange">
-                                    <MessageSquare size={20} />
-                                </div>
-                                <div>
-                                    <h1 className="text-lg font-bold text-gray-800">{selectedScript.title}</h1>
-                                    <p className="text-xs text-gray-500">
-                                        Atualizado em {new Date(selectedScript.updated_at).toLocaleDateString('pt-BR')}
-                                    </p>
-                                </div>
-                            </div>
+                <AnimatePresence mode="wait">
+                    {selectedScript ? (
+                        <motion.div
+                            key={selectedScript.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                            className="flex-1 rounded-2xl flex flex-col overflow-hidden h-full"
+                        >
+                            <GlassPane className="flex-1 rounded-2xl flex flex-col overflow-hidden h-full">
+                                {/* Header */}
+                                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-orqio-orange/10 rounded-lg text-orqio-orange">
+                                            <MessageSquare size={20} />
+                                        </div>
+                                        <div>
+                                            <h1 className="text-lg font-bold text-gray-800">{selectedScript.title}</h1>
+                                            <p className="text-xs text-gray-500">
+                                                Atualizado em {new Date(selectedScript.updated_at).toLocaleDateString('pt-BR')}
+                                            </p>
+                                        </div>
+                                    </div>
 
-                            <div className="flex gap-2">
-                                {isEditing ? (
-                                    <>
-                                        <Button variant="ghost" onClick={handleCancel} disabled={saving}>
-                                            <X size={16} /> Cancelar
-                                        </Button>
-                                        <Button onClick={handleSave} disabled={saving}>
-                                            <Save size={16} /> {saving ? 'Salvando...' : 'Salvar'}
-                                        </Button>
-                                    </>
-                                ) : (
-                                    <Button variant="secondary" onClick={handleEdit}>
-                                        <Edit3 size={16} /> Editar
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
+                                    <div className="flex gap-2">
+                                        {isEditing ? (
+                                            <>
+                                                <Button variant="ghost" onClick={handleCancel} disabled={saving}>
+                                                    <X size={16} /> Cancelar
+                                                </Button>
+                                                <Button onClick={handleSave} disabled={saving}>
+                                                    <Save size={16} /> {saving ? 'Salvando...' : 'Salvar'}
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <Button variant="secondary" onClick={handleEdit}>
+                                                <Edit3 size={16} /> Editar
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
 
-                        {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-6">
-                            {isEditing ? (
-                                <ScriptVisualEditor
-                                    key={selectedScript.id}
-                                    initialContent={editContent}
-                                    onChange={setEditContent}
-                                />
-                            ) : (
-                                <ScriptStepViewer content={selectedScript.content} />
-                            )}
-                        </div>
-                    </GlassPane>
-                ) : (
-                    <GlassPane className="flex-1 rounded-2xl flex items-center justify-center">
-                        <div className="text-center text-gray-500">
-                            <FileText size={48} className="mx-auto mb-4 opacity-50" />
-                            <p>Selecione um script para visualizar</p>
-                        </div>
-                    </GlassPane>
-                )}
+                                {/* Content */}
+                                <div className="flex-1 overflow-y-auto p-6">
+                                    {isEditing ? (
+                                        <ScriptVisualEditor
+                                            key={selectedScript.id}
+                                            initialContent={editContent}
+                                            onChange={setEditContent}
+                                        />
+                                    ) : (
+                                        <ScriptStepViewer content={selectedScript.content} />
+                                    )}
+                                </div>
+                            </GlassPane>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="empty"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex-1 rounded-2xl flex items-center justify-center h-full"
+                        >
+                            <GlassPane className="flex-1 rounded-2xl flex items-center justify-center h-full">
+                                <div className="text-center text-gray-500">
+                                    <FileText size={48} className="mx-auto mb-4 opacity-50" />
+                                    <p>Selecione um script para visualizar</p>
+                                </div>
+                            </GlassPane>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

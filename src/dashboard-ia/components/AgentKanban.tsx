@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { GlassPane } from '../../../components/ui/Glass';
+import { GlassPane, Button } from '../../../components/ui/Glass';
 import { AgentLeadModal } from './AgentLeadModal';
+import { NewLeadModal } from './NewLeadModal';
 import { LeadService } from '../services';
 import { DashboardLead, LeadStage } from '../types';
-import { User, Phone, Mail, Bot } from 'lucide-react';
+import { User, Phone, Mail, Bot, UserPlus } from 'lucide-react';
 
 const COLUMNS: { id: LeadStage; label: string; color: string }[] = [
     { id: 'primeiro_contato', label: 'Primeiro Contato', color: 'bg-blue-100 text-blue-800 border-blue-200' },
@@ -15,12 +16,17 @@ const COLUMNS: { id: LeadStage; label: string; color: string }[] = [
 export const AgentKanban: React.FC = () => {
     const [leads, setLeads] = useState<DashboardLead[]>([]);
     const [selectedLead, setSelectedLead] = useState<DashboardLead | null>(null);
+    const [showNewLeadModal, setShowNewLeadModal] = useState(false);
+
+    const loadLeads = () => {
+        LeadService.getLeads().then(setLeads);
+    };
 
     useEffect(() => {
-        LeadService.getLeads().then(setLeads);
+        loadLeads();
 
         const subscription = LeadService.subscribeToLeads(() => {
-            LeadService.getLeads().then(setLeads);
+            loadLeads();
         });
 
         return () => {
@@ -32,7 +38,15 @@ export const AgentKanban: React.FC = () => {
 
     return (
         <>
-            <div className="flex h-full gap-4 overflow-x-auto pb-2">
+            {/* Header with Novo Lead button */}
+            <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-800">Pipeline de Leads IA</h2>
+                <Button className="text-sm gap-2" onClick={() => setShowNewLeadModal(true)}>
+                    <UserPlus size={16} /> Novo Lead
+                </Button>
+            </div>
+
+            <div className="flex h-[calc(100%-3.5rem)] gap-4 overflow-x-auto pb-2">
                 {COLUMNS.map((col) => (
                     <div key={col.id} className="min-w-[280px] w-full max-w-xs flex flex-col h-full">
                         <div className={`p-3 rounded-xl mb-3 border font-semibold flex items-center justify-between ${col.color}`}>
@@ -52,9 +66,9 @@ export const AgentKanban: React.FC = () => {
                                     <h4 className="font-bold text-gray-800 flex items-center justify-between">
                                         {lead.name}
                                         {lead.isIA ? (
-                                            <Bot size={14} className="text-indigo-500" title="IA Ativa" />
+                                            <span title="IA Ativa"><Bot size={14} className="text-indigo-500" /></span>
                                         ) : (
-                                            <User size={14} className="text-gray-400" title="Humano" />
+                                            <span title="Humano"><User size={14} className="text-gray-400" /></span>
                                         )}
                                     </h4>
                                     <div className="mt-3 space-y-1.5">
@@ -83,6 +97,12 @@ export const AgentKanban: React.FC = () => {
             <AgentLeadModal
                 lead={selectedLead}
                 onClose={() => setSelectedLead(null)}
+            />
+
+            <NewLeadModal
+                isOpen={showNewLeadModal}
+                onClose={() => setShowNewLeadModal(false)}
+                onCreated={() => loadLeads()}
             />
         </>
     );

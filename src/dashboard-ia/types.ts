@@ -16,6 +16,7 @@ export interface DashboardSchedule {
   leadName: string;
   date: string; // ISO string
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  servico: string;
   notes?: string;
 }
 

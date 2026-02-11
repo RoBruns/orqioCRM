@@ -26,6 +26,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Phone, Calendar, Building2, User } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useLeadStore } from '../store';
 import { COLUMNS, Lead, LeadStatus } from '../types';
 import { GlassPane } from './ui/Glass';
@@ -339,13 +340,20 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ leads, onLeadClick }) 
     >
       <div className="flex-1 overflow-auto">
         <div className="h-full flex px-6 gap-4 pb-4 min-w-max">
-          {COLUMNS.map(col => (
-            <KanbanColumn
+          {COLUMNS.map((col, index) => (
+            <motion.div
               key={col.id}
-              column={col}
-              leads={items[col.id]} // Render from local items state!
-              onLeadClick={onLeadClick}
-            />
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.3 }}
+              className="h-full"
+            >
+              <KanbanColumn
+                column={col}
+                leads={items[col.id]} // Render from local items state!
+                onLeadClick={onLeadClick}
+              />
+            </motion.div>
           ))}
         </div>
       </div>

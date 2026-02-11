@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, Search, LayoutGrid, BarChart3, LogOut, Bot, FileText } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useLeadStore } from './store';
 import { Lead } from './types';
 import { Button, Input } from './components/ui/Glass';
@@ -94,20 +95,23 @@ function MainApp() {
             </button>
           </div>
 
-          <div className="relative w-full max-w-xs group hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orqio-orange transition-colors" size={18} />
-            <Input
-              placeholder="Buscar..."
-              className="pl-10 bg-white/40 border-transparent hover:bg-white/60 focus:bg-white"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              disabled={currentView === 'dashboard' || currentView === 'scripts'} // Disable search in dashboard/scripts
-            />
-          </div>
+          {currentView === 'kanban' && (
+            <>
+              <div className="relative w-full max-w-xs group hidden sm:block">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orqio-orange transition-colors" size={18} />
+                <Input
+                  placeholder="Buscar..."
+                  className="pl-10 bg-white/40 border-transparent hover:bg-white/60 focus:bg-white"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
 
-          <Button onClick={() => { setEditingLead(null); setModalOpen(true); }} className="whitespace-nowrap">
-            <Plus size={18} /> <span className="hidden sm:inline">Novo Lead</span>
-          </Button>
+              <Button onClick={() => { setEditingLead(null); setModalOpen(true); }} className="whitespace-nowrap">
+                <Plus size={18} /> <span className="hidden sm:inline">Novo Lead</span>
+              </Button>
+            </>
+          )}
 
           <button
             onClick={signOut}
@@ -121,18 +125,56 @@ function MainApp() {
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-hidden relative flex flex-col">
-        {currentView === 'kanban' ? (
-          <KanbanBoard
-            leads={filteredLeads}
-            onLeadClick={(lead) => { setEditingLead(lead); setModalOpen(true); }}
-          />
-        ) : currentView === 'dashboard' ? (
-          <Dashboard />
-        ) : currentView === 'scripts' ? (
-          <ScriptsPage />
-        ) : (
-          <DashboardIA />
-        )}
+        <AnimatePresence mode="wait">
+          {currentView === 'kanban' ? (
+            <motion.div
+              key="kanban"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+              className="h-full w-full flex flex-col"
+            >
+              <KanbanBoard
+                leads={filteredLeads}
+                onLeadClick={(lead) => { setEditingLead(lead); setModalOpen(true); }}
+              />
+            </motion.div>
+          ) : currentView === 'dashboard' ? (
+            <motion.div
+              key="dashboard"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+              className="h-full w-full overflow-y-auto"
+            >
+              <Dashboard />
+            </motion.div>
+          ) : currentView === 'scripts' ? (
+            <motion.div
+              key="scripts"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+              className="h-full w-full overflow-y-auto"
+            >
+              <ScriptsPage />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="dashboard-ia"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+              className="h-full w-full overflow-y-auto"
+            >
+              <DashboardIA />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Lead Modal */}
