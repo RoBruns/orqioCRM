@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { GlassPane } from '../../../components/ui/Glass';
-import { Calculator, Cpu, Server, DollarSign, Users, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calculator, Cpu, Server, DollarSign, Users, ChevronDown, ChevronUp, RefreshCw, TrendingUp } from 'lucide-react';
 
 interface CalcInputs {
     clientesPorDia: number;
@@ -74,6 +74,26 @@ const fmt = (val: number, prefix = 'R$') =>
 
 export const InfraCalculator: React.FC = () => {
     const [showClientes, setShowClientes] = useState(false);
+    const [usdRate, setUsdRate] = useState<number | null>(null);
+    const [rateLoading, setRateLoading] = useState(true);
+    const [rateError, setRateError] = useState(false);
+
+    const fetchRate = async () => {
+        setRateLoading(true);
+        setRateError(false);
+        try {
+            const res = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL');
+            const data = await res.json();
+            setUsdRate(parseFloat(data.USDBRL.bid));
+        } catch {
+            setRateError(true);
+        } finally {
+            setRateLoading(false);
+        }
+    };
+
+    useEffect(() => { fetchRate(); }, []);
+
     const [inputs, setInputs] = useState<CalcInputs>({
         clientesPorDia: 10,
         mensagensPorCliente: 10,
@@ -105,32 +125,60 @@ export const InfraCalculator: React.FC = () => {
         const custoInfraFixa =
             inputs.custoVPS + inputs.custoSupabase + inputs.custoWhatsAppAPI + inputs.custoExterno;
 
-        const custoTotal = custoLLM + custoInfraFixa;
+        const rate = usdRate ?? 5.5; // fallback enquanto carrega
+        const custoLLMBRL = custoLLM * rate;
+        const custoTotal = custoLLMBRL + custoInfraFixa;
 
         const numClientes = Math.max(inputs.numeroDeClientes, 1);
         const custoInfraPorCliente = custoInfraFixa / numClientes;
-        const custoPorCliente = custoInfraPorCliente + custoLLM;
+        const custoPorCliente = custoInfraPorCliente + custoLLMBRL;
 
         return {
             mensagensPorDia,
             mensagensPorMes,
             custoLLM,
+            custoLLMBRL,
             custoInfraFixa,
             custoTotal,
             custoPorCliente,
         };
-    }, [inputs]);
+    }, [inputs, usdRate]);
 
     return (
         <div className="flex flex-col gap-6 h-full overflow-y-auto custom-scrollbar p-1">
             {/* Header */}
-            <div className="flex items-center gap-3">
-                <div className="bg-indigo-600 text-white p-2.5 rounded-xl shadow-lg shadow-indigo-500/30">
-                    <Calculator size={22} />
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3">
+                    <div className="bg-indigo-600 text-white p-2.5 rounded-xl shadow-lg shadow-indigo-500/30">
+                        <Calculator size={22} />
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-bold text-gray-800">Calculadora de Custo de Infra</h1>
+                        <p className="text-xs text-gray-500">Automação WhatsApp com IA — estimativa mensal</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 className="text-xl font-bold text-gray-800">Calculadora de Custo de Infra</h1>
-                    <p className="text-xs text-gray-500">Automação WhatsApp com IA — estimativa mensal</p>
+
+                {/* Badge cotação USD-BRL */}
+                <div className="flex items-center gap-2 bg-white/70 border border-gray-200 rounded-xl px-3 py-2">
+                    <TrendingUp size={14} className="text-green-500" />
+                    <span className="text-xs text-gray-500 font-medium">USD/BRL</span>
+                    {rateLoading ? (
+                        <span className="text-xs text-gray-400 animate-pulse">Buscando...</span>
+                    ) : rateError ? (
+                        <span className="text-xs text-red-400">Erro</span>
+                    ) : (
+                        <span className="text-sm font-bold text-gray-800">
+                            R$ {usdRate?.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}
+                        </span>
+                    )}
+                    <button
+                        onClick={fetchRate}
+                        disabled={rateLoading}
+                        className="ml-1 text-gray-400 hover:text-indigo-600 transition-colors disabled:opacity-40"
+                        title="Atualizar cotação"
+                    >
+                        <RefreshCw size={13} className={rateLoading ? 'animate-spin' : ''} />
+                    </button>
                 </div>
             </div>
 
@@ -215,8 +263,8 @@ export const InfraCalculator: React.FC = () => {
                         <ResultCard
                             icon={<Cpu size={20} />}
                             label="Custo IA (LLM)"
-                            value={fmt(results.custoLLM, 'US$')}
-                            sublabel="Tokens de entrada + saída"
+                            value={fmt(results.custoLLMBRL)}
+                            sublabel={`US$ ${results.custoLLM.toLocaleString('pt-BR', { minimumFractionDigits: 4 })} × R$ ${(usdRate ?? 5.5).toFixed(4)}`}
                         />
                         <ResultCard
                             icon={<Server size={20} />}
@@ -228,6 +276,7 @@ export const InfraCalculator: React.FC = () => {
                             icon={<DollarSign size={20} />}
                             label="Custo Total Mensal"
                             value={fmt(results.custoTotal)}
+                            sublabel={rateLoading ? 'Aguardando cotação...' : undefined}
                             highlight
                         />
 
@@ -250,8 +299,8 @@ export const InfraCalculator: React.FC = () => {
                                 { label: 'Supabase', value: fmt(inputs.custoSupabase) },
                                 { label: 'WhatsApp API', value: fmt(inputs.custoWhatsAppAPI) },
                                 { label: 'Outros serviços', value: fmt(inputs.custoExterno) },
-                                { label: 'LLM (input)', value: fmt((results.custoLLM * (inputs.tokensPorMensagemInput / (inputs.tokensPorMensagemInput + inputs.tokensPorMensagemOutput || 1))), 'US$') },
-                                { label: 'LLM (output)', value: fmt((results.custoLLM * (inputs.tokensPorMensagemOutput / (inputs.tokensPorMensagemInput + inputs.tokensPorMensagemOutput || 1))), 'US$') },
+                                { label: 'LLM em BRL (input)', value: fmt(results.custoLLMBRL * (inputs.tokensPorMensagemInput / (inputs.tokensPorMensagemInput + inputs.tokensPorMensagemOutput || 1))) },
+                                { label: 'LLM em BRL (output)', value: fmt(results.custoLLMBRL * (inputs.tokensPorMensagemOutput / (inputs.tokensPorMensagemInput + inputs.tokensPorMensagemOutput || 1))) },
                             ].map((row) => (
                                 <div key={row.label} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
                                     <span className="text-gray-500">{row.label}</span>
@@ -260,11 +309,6 @@ export const InfraCalculator: React.FC = () => {
                             ))}
                         </div>
                     </GlassPane>
-
-                    <p className="text-[11px] text-gray-400 text-center px-2">
-                        ⚠️ Os valores de LLM estão em dólar (US$). Os custos de infra são em reais (R$).
-                        Converta conforme a cotação atual para totalização unificada.
-                    </p>
                 </div>
             </div>
         </div>
