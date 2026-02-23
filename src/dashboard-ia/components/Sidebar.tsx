@@ -1,10 +1,10 @@
 import React from 'react';
-import { LayoutDashboard, KanbanSquare, Calendar, Bot } from 'lucide-react';
+import { LayoutDashboard, KanbanSquare, Calendar, Bot, Calculator } from 'lucide-react';
 import { GlassPane } from '../../../components/ui/Glass';
 
 interface SidebarProps {
-    activeTab: 'dashboard' | 'kanban' | 'schedules';
-    onTabChange: (tab: 'dashboard' | 'kanban' | 'schedules') => void;
+    activeTab: 'dashboard' | 'kanban' | 'schedules' | 'calculator';
+    onTabChange: (tab: 'dashboard' | 'kanban' | 'schedules' | 'calculator') => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
@@ -12,6 +12,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'kanban', label: 'Kanban IA', icon: KanbanSquare },
         { id: 'schedules', label: 'Agendamentos', icon: Calendar },
+        { id: 'calculator', label: 'Calculadora', icon: Calculator },
     ] as const;
 
     return (
@@ -36,8 +37,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                             key={item.id}
                             onClick={() => onTabChange(item.id)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium ${isActive
-                                    ? 'bg-indigo-50 text-indigo-700 shadow-sm'
-                                    : 'text-gray-600 hover:bg-white/40 hover:text-gray-900'
+                                ? 'bg-indigo-50 text-indigo-700 shadow-sm'
+                                : 'text-gray-600 hover:bg-white/40 hover:text-gray-900'
                                 }`}
                         >
                             <Icon size={20} className={isActive ? 'text-indigo-600' : 'text-gray-400'} />

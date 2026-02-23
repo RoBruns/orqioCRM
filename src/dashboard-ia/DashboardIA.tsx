@@ -3,11 +3,12 @@ import { Sidebar } from './components/Sidebar';
 import { AgentDashboard } from './components/AgentDashboard';
 import { AgentKanban } from './components/AgentKanban';
 import { AgentSchedules } from './components/AgentSchedules';
+import { InfraCalculator } from './components/InfraCalculator';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export const DashboardIA: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'kanban' | 'schedules'>(() => {
-        return (localStorage.getItem('agent_active_tab') as 'dashboard' | 'kanban' | 'schedules') || 'dashboard';
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'kanban' | 'schedules' | 'calculator'>(() => {
+        return (localStorage.getItem('agent_active_tab') as 'dashboard' | 'kanban' | 'schedules' | 'calculator') || 'dashboard';
     });
 
     useEffect(() => {
@@ -57,6 +58,18 @@ export const DashboardIA: React.FC = () => {
                                 className="h-full"
                             >
                                 <AgentSchedules />
+                            </motion.div>
+                        )}
+                        {activeTab === 'calculator' && (
+                            <motion.div
+                                key="calculator"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 10 }}
+                                transition={{ duration: 0.2 }}
+                                className="h-full"
+                            >
+                                <InfraCalculator />
                             </motion.div>
                         )}
                     </AnimatePresence>
