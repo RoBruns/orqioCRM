@@ -3,7 +3,8 @@ import { GlassPane } from '../../../components/ui/Glass';
 import { Calculator, Cpu, Server, DollarSign, Users, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface CalcInputs {
-    mensagensPorDia: number;
+    clientesPorDia: number;
+    mensagensPorCliente: number;
     diasPorMes: number;
     tokensPorMensagemInput: number;
     tokensPorMensagemOutput: number;
@@ -74,7 +75,8 @@ const fmt = (val: number, prefix = 'R$') =>
 export const InfraCalculator: React.FC = () => {
     const [showClientes, setShowClientes] = useState(false);
     const [inputs, setInputs] = useState<CalcInputs>({
-        mensagensPorDia: 100,
+        clientesPorDia: 10,
+        mensagensPorCliente: 10,
         diasPorMes: 30,
         tokensPorMensagemInput: 500,
         tokensPorMensagemOutput: 300,
@@ -91,7 +93,8 @@ export const InfraCalculator: React.FC = () => {
         setInputs((prev) => ({ ...prev, [key]: val }));
 
     const results = useMemo(() => {
-        const mensagensPorMes = inputs.mensagensPorDia * inputs.diasPorMes;
+        const mensagensPorDia = inputs.clientesPorDia * inputs.mensagensPorCliente;
+        const mensagensPorMes = mensagensPorDia * inputs.diasPorMes;
         const tokensInputMes = mensagensPorMes * inputs.tokensPorMensagemInput;
         const tokensOutputMes = mensagensPorMes * inputs.tokensPorMensagemOutput;
 
@@ -109,6 +112,7 @@ export const InfraCalculator: React.FC = () => {
         const custoPorCliente = custoInfraPorCliente + custoLLM;
 
         return {
+            mensagensPorDia,
             mensagensPorMes,
             custoLLM,
             custoInfraFixa,
@@ -141,13 +145,15 @@ export const InfraCalculator: React.FC = () => {
                             <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">Volume de Mensagens</h2>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
-                            <InputField label="Mensagens / dia" value={inputs.mensagensPorDia} onChange={set('mensagensPorDia')} />
+                            <InputField label="Clientes / dia" value={inputs.clientesPorDia} onChange={set('clientesPorDia')} min={1} />
+                            <InputField label="Mensagens / cliente" value={inputs.mensagensPorCliente} onChange={set('mensagensPorCliente')} min={1} />
                             <InputField label="Dias / mês" value={inputs.diasPorMes} onChange={set('diasPorMes')} min={1} />
                             <InputField label="Tokens input / msg" value={inputs.tokensPorMensagemInput} onChange={set('tokensPorMensagemInput')} suffix="tk" />
                             <InputField label="Tokens output / msg" value={inputs.tokensPorMensagemOutput} onChange={set('tokensPorMensagemOutput')} suffix="tk" />
                         </div>
-                        <div className="bg-indigo-50 rounded-xl px-4 py-2 text-xs text-indigo-700 font-medium">
-                            📨 Volume mensal estimado: <strong>{results.mensagensPorMes.toLocaleString('pt-BR')} mensagens</strong>
+                        <div className="bg-indigo-50 rounded-xl px-4 py-2 text-xs text-indigo-700 font-medium flex flex-wrap gap-x-4 gap-y-1">
+                            <span>� <strong>{inputs.clientesPorDia}</strong> clientes × <strong>{inputs.mensagensPorCliente}</strong> msgs = <strong>{results.mensagensPorDia.toLocaleString('pt-BR')} msgs/dia</strong></span>
+                            <span>📨 <strong>{results.mensagensPorMes.toLocaleString('pt-BR')} mensagens/mês</strong></span>
                         </div>
                     </GlassPane>
 
