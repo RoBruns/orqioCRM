@@ -38,6 +38,12 @@ export const useLeadStore = () => {
         createdAt: l.created_at,
         responsibleName: l.responsible_name,
         responsiblePhone: l.responsible_phone,
+        secretaryName: l.secretary_name,
+        decisionMakerName: l.decision_maker_name,
+        clinicPhone: l.clinic_phone,
+        decisionMakerPhone: l.decision_maker_phone,
+        additionalPhones: l.additional_phones,
+        productType: l.product_type,
         origin: l.origin,
         owner: l.owner,
         lastInteraction: l.last_interaction,
@@ -71,6 +77,12 @@ export const useLeadStore = () => {
             createdAt: newLeadRaw.created_at,
             responsibleName: newLeadRaw.responsible_name,
             responsiblePhone: newLeadRaw.responsible_phone,
+            secretaryName: newLeadRaw.secretary_name,
+            decisionMakerName: newLeadRaw.decision_maker_name,
+            clinicPhone: newLeadRaw.clinic_phone,
+            decisionMakerPhone: newLeadRaw.decision_maker_phone,
+            additionalPhones: newLeadRaw.additional_phones,
+            productType: newLeadRaw.product_type,
             origin: newLeadRaw.origin,
             owner: newLeadRaw.owner,
             lastInteraction: newLeadRaw.last_interaction,
@@ -96,6 +108,12 @@ export const useLeadStore = () => {
                 status: updatedRaw.status as LeadStatus,
                 responsibleName: updatedRaw.responsible_name,
                 responsiblePhone: updatedRaw.responsible_phone,
+                secretaryName: updatedRaw.secretary_name,
+                decisionMakerName: updatedRaw.decision_maker_name,
+                clinicPhone: updatedRaw.clinic_phone,
+                decisionMakerPhone: updatedRaw.decision_maker_phone,
+                additionalPhones: updatedRaw.additional_phones,
+                productType: updatedRaw.product_type,
                 origin: updatedRaw.origin,
                 lastInteraction: updatedRaw.last_interaction,
                 nextAction: updatedRaw.next_action,
@@ -135,6 +153,13 @@ export const useLeadStore = () => {
       status: LeadStatus.NEW,
       createdAt: new Date().toISOString(),
       responsibleName: dbData.responsibleName,
+      responsiblePhone: dbData.responsiblePhone,
+      secretaryName: dbData.secretaryName,
+      decisionMakerName: dbData.decisionMakerName,
+      clinicPhone: dbData.clinicPhone,
+      decisionMakerPhone: dbData.decisionMakerPhone,
+      additionalPhones: dbData.additionalPhones,
+      productType: dbData.productType,
       origin: dbData.origin,
       owner: user.id || 'me',
       lastInteraction: new Date().toISOString(),
@@ -161,6 +186,12 @@ export const useLeadStore = () => {
         origin: dbData.origin,
         responsible_name: dbData.responsibleName,
         responsible_phone: dbData.responsiblePhone,
+        secretary_name: dbData.secretaryName,
+        decision_maker_name: dbData.decisionMakerName,
+        clinic_phone: dbData.clinicPhone,
+        decision_maker_phone: dbData.decisionMakerPhone,
+        additional_phones: dbData.additionalPhones,
+        product_type: dbData.productType,
         next_action: dbData.nextAction, // Ensuring this is also sent if present
       }])
       .select()
@@ -202,15 +233,21 @@ export const useLeadStore = () => {
 
     // Map CamelCase to snake_case for DB
     const dbUpdates: any = {};
-    if (updates.name) dbUpdates.name = updates.name;
-    if (updates.company) dbUpdates.company = updates.company;
-    if (updates.phone) dbUpdates.phone = updates.phone;
-    if (updates.email) dbUpdates.email = updates.email;
-    if (updates.status) dbUpdates.status = updates.status;
-    if (updates.responsibleName) dbUpdates.responsible_name = updates.responsibleName;
-    if (updates.responsiblePhone) dbUpdates.responsible_phone = updates.responsiblePhone;
-    if (updates.lastInteraction) dbUpdates.last_interaction = updates.lastInteraction;
-    if (updates.nextAction) dbUpdates.next_action = updates.nextAction;
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.company !== undefined) dbUpdates.company = updates.company;
+    if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
+    if (updates.email !== undefined) dbUpdates.email = updates.email;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    if (updates.responsibleName !== undefined) dbUpdates.responsible_name = updates.responsibleName;
+    if (updates.responsiblePhone !== undefined) dbUpdates.responsible_phone = updates.responsiblePhone;
+    if (updates.secretaryName !== undefined) dbUpdates.secretary_name = updates.secretaryName;
+    if (updates.decisionMakerName !== undefined) dbUpdates.decision_maker_name = updates.decisionMakerName;
+    if (updates.clinicPhone !== undefined) dbUpdates.clinic_phone = updates.clinicPhone;
+    if (updates.decisionMakerPhone !== undefined) dbUpdates.decision_maker_phone = updates.decisionMakerPhone;
+    if (updates.additionalPhones !== undefined) dbUpdates.additional_phones = updates.additionalPhones;
+    if (updates.productType !== undefined) dbUpdates.product_type = updates.productType;
+    if (updates.lastInteraction !== undefined) dbUpdates.last_interaction = updates.lastInteraction;
+    if (updates.nextAction !== undefined) dbUpdates.next_action = updates.nextAction;
 
     const { error } = await supabase
       .from('leads')

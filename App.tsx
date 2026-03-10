@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, LayoutGrid, BarChart3, LogOut, Bot, FileText } from 'lucide-react';
+import { Plus, Search, LogOut } from 'lucide-react';
+import { Sidebar } from './components/Sidebar';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLeadStore } from './store';
 import { Lead } from './types';
@@ -45,158 +46,129 @@ function MainApp() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden text-orqio-black">
+    <div className="h-screen w-screen flex overflow-hidden text-orqio-black bg-[#fafafa]">
 
-      {/* Top Bar */}
-      <header className="px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="bg-orqio-orange w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30 text-white font-bold text-xl">
-            O
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">CRM Orqio</h1>
-            <p className="text-xs text-gray-500">Pipeline de Vendas</p>
-          </div>
-        </div>
-
-        {/* Navigation & Search */}
-        <div className="flex items-center gap-3 flex-1 md:justify-end">
-
-          {/* View Toggles */}
-          <div className="flex bg-white/40 p-1 rounded-xl border border-white/40 mr-2">
-            <button
-              onClick={() => setCurrentView('kanban')}
-              className={`p-2 rounded-lg transition-all ${currentView === 'kanban' ? 'bg-white shadow-sm text-orqio-orange' : 'text-gray-500 hover:text-gray-700'}`}
-              title="Pipeline Kanban"
-            >
-              <LayoutGrid size={20} />
-            </button>
-            <button
-              onClick={() => setCurrentView('dashboard')}
-              className={`p-2 rounded-lg transition-all ${currentView === 'dashboard' ? 'bg-white shadow-sm text-orqio-orange' : 'text-gray-500 hover:text-gray-700'}`}
-              title="Dashboard KPIs"
-            >
-              <BarChart3 size={20} />
-            </button>
-            <div className="w-px h-6 bg-gray-300/50 mx-1 self-center"></div>
-            <button
-              onClick={() => setCurrentView('scripts')}
-              className={`p-2 rounded-lg transition-all ${currentView === 'scripts' ? 'bg-white shadow-sm text-orqio-orange' : 'text-gray-500 hover:text-gray-700'}`}
-              title="Scripts de Vendas"
-            >
-              <FileText size={20} />
-            </button>
-            <button
-              onClick={() => setCurrentView('dashboard-ia')}
-              className={`p-2 rounded-lg transition-all ${currentView === 'dashboard-ia' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
-              title="Agente IA"
-            >
-              <Bot size={20} />
-            </button>
-          </div>
-
-          {currentView === 'kanban' && (
-            <>
-              <div className="relative w-full max-w-xs group hidden sm:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orqio-orange transition-colors" size={18} />
-                <Input
-                  placeholder="Buscar..."
-                  className="pl-10 bg-white/40 border-transparent hover:bg-white/60 focus:bg-white"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-
-              <Button onClick={() => { setEditingLead(null); setModalOpen(true); }} className="whitespace-nowrap">
-                <Plus size={18} /> <span className="hidden sm:inline">Novo Lead</span>
-              </Button>
-            </>
-          )}
-
-          <button
-            onClick={signOut}
-            className="p-2.5 rounded-xl bg-white/40 hover:bg-red-50 hover:text-red-500 text-gray-500 transition-colors ml-2"
-            title="Sair"
-          >
-            <LogOut size={18} />
-          </button>
-        </div>
-      </header>
+      {/* Sidebar Navigation */}
+      <Sidebar currentView={currentView} setCurrentView={setCurrentView} />
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-hidden relative flex flex-col">
-        <AnimatePresence mode="wait">
-          {currentView === 'kanban' ? (
-            <motion.div
-              key="kanban"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2 }}
-              className="h-full w-full flex flex-col"
-            >
-              <KanbanBoard
-                leads={filteredLeads}
-                onLeadClick={(lead) => { setEditingLead(lead); setModalOpen(true); }}
-              />
-            </motion.div>
-          ) : currentView === 'dashboard' ? (
-            <motion.div
-              key="dashboard"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2 }}
-              className="h-full w-full overflow-y-auto"
-            >
-              <Dashboard />
-            </motion.div>
-          ) : currentView === 'scripts' ? (
-            <motion.div
-              key="scripts"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2 }}
-              className="h-full w-full overflow-y-auto"
-            >
-              <ScriptsPage />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="dashboard-ia"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2 }}
-              className="h-full w-full overflow-y-auto"
-            >
-              <DashboardIA />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
+      <div className="flex-1 flex flex-col min-w-0 relative z-10">
 
-      {/* Lead Modal */}
-      <LeadModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        initialData={editingLead}
-        onSave={(data) => {
-          if (editingLead) {
-            updateLead(editingLead.id, data);
-          } else {
-            addLead(data as any);
-          }
-        }}
-        onAddNote={addNote}
-        onDelete={(id) => {
-          if (confirm('Tem certeza que deseja excluir este lead?')) {
-            deleteLead(id);
-            setModalOpen(false);
-          }
-        }}
-      />
+        {/* Top Header - Kept only for Search and "New Lead" button */}
+        <header className="px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 z-10 shrink-0">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+              {currentView === 'kanban' ? 'Pipeline de Vendas' :
+                currentView === 'dashboard' ? 'Overview' :
+                  currentView === 'scripts' ? 'Call Scripts' : 'Workspace IA'}
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-3 flex-1 md:justify-end">
+
+            {currentView === 'kanban' && (
+              <>
+                <div className="relative w-full max-w-xs group hidden sm:block">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orqio-orange transition-colors" size={18} />
+                  <Input
+                    placeholder="Buscar leads por nome, empresa ou telefone..."
+                    className="pl-10 bg-white/40 border-transparent hover:bg-white/60 focus:bg-white"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+
+                <Button onClick={() => { setEditingLead(null); setModalOpen(true); }} className="whitespace-nowrap">
+                  <Plus size={18} /> <span className="hidden sm:inline">Novo Lead</span>
+                </Button>
+              </>
+            )}
+
+            <button
+              onClick={signOut}
+              className="p-2.5 rounded-xl bg-white/40 hover:bg-red-50 hover:text-red-500 text-gray-500 transition-colors ml-2"
+              title="Sair"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
+        </header>
+
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-hidden relative flex flex-col">
+          <AnimatePresence mode="wait">
+            {currentView === 'kanban' ? (
+              <motion.div
+                key="kanban"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+                className="h-full w-full flex flex-col"
+              >
+                <KanbanBoard
+                  leads={filteredLeads}
+                  onLeadClick={(lead) => { setEditingLead(lead); setModalOpen(true); }}
+                />
+              </motion.div>
+            ) : currentView === 'dashboard' ? (
+              <motion.div
+                key="dashboard"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+                className="h-full w-full overflow-y-auto"
+              >
+                <Dashboard />
+              </motion.div>
+            ) : currentView === 'scripts' ? (
+              <motion.div
+                key="scripts"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+                className="h-full w-full overflow-y-auto"
+              >
+                <ScriptsPage />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="dashboard-ia"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+                className="h-full w-full overflow-y-auto"
+              >
+                <DashboardIA />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+
+        {/* Lead Modal */}
+        <LeadModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          initialData={editingLead}
+          onSave={(data) => {
+            if (editingLead) {
+              updateLead(editingLead.id, data);
+            } else {
+              addLead(data as any);
+            }
+          }}
+          onAddNote={addNote}
+          onDelete={(id) => {
+            if (confirm('Tem certeza que deseja excluir este lead?')) {
+              deleteLead(id);
+              setModalOpen(false);
+            }
+          }}
+        />
+      </div>
     </div>
   );
 }

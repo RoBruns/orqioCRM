@@ -27,6 +27,12 @@ export interface Lead {
   // Optional
   responsibleName?: string;
   responsiblePhone?: string;
+  secretaryName?: string;
+  decisionMakerName?: string;
+  clinicPhone?: string;
+  decisionMakerPhone?: string;
+  additionalPhones?: string[];
+  productType?: string;
   origin?: string;
   owner?: string; // Internal user responsible
   lastInteraction?: string;

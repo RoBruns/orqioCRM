@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   DndContext,
   DragOverlay,
-  closestCorners,
+  closestCenter,
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
@@ -59,25 +59,28 @@ const LeadCard: React.FC<LeadCardProps> = ({ lead, onClick }) => {
     transition,
   };
 
-  if (isDragging) {
-    return (
-      <div ref={setNodeRef} style={style} className="opacity-30 h-[120px] bg-gray-200/50 rounded-2xl mb-3 border-2 border-dashed border-gray-300" />
-    );
-  }
-
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
-      className={`touch-none outline-none ${lead.isOptimistic ? 'cursor-wait opacity-70' : ''}`}
+      className={`touch-none outline-none ${lead.isOptimistic ? 'cursor-wait opacity-70' : ''} ${isDragging ? 'opacity-40 grayscale sepia-0' : ''}`}
     >
       <GlassPane
         intensity="low"
-        hoverEffect={!lead.isOptimistic}
-        onClick={lead.isOptimistic ? undefined : onClick}
-        className={`p-4 rounded-2xl mb-3 group relative ${lead.isOptimistic ? 'border-orqio-orange/50 border-dashed' : 'cursor-grab active:cursor-grabbing'}`}
+        hoverEffect={!lead.isOptimistic && !isDragging}
+        onClick={(lead.isOptimistic || isDragging) ? undefined : onClick}
+        className={`p-4 rounded-2xl mb-3 group relative border-2 ${lead.isOptimistic
+          ? 'border-orqio-orange/50 border-dashed'
+          : isDragging
+            ? 'border-dashed border-gray-400 bg-gray-50/50'
+            : lead.productType === 'Automation'
+              ? 'border-purple-400 border-solid cursor-grab active:cursor-grabbing'
+              : lead.productType === 'Landing Page'
+                ? 'border-blue-400 border-solid cursor-grab active:cursor-grabbing'
+                : 'border-transparent cursor-grab active:cursor-grabbing'
+          }`}
       >
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-center gap-2">
@@ -331,44 +334,95 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ leads, onLeadClick }) 
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={rectIntersection}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDragEnd={onDragEnd}
-    >
-      <div className="flex-1 overflow-auto">
-        <div className="h-full flex px-6 gap-4 pb-4 min-w-max">
-          {COLUMNS.map((col, index) => (
-            <motion.div
-              key={col.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.3 }}
-              className="h-full"
-            >
-              <KanbanColumn
-                column={col}
-                leads={items[col.id]} // Render from local items state!
-                onLeadClick={onLeadClick}
-              />
-            </motion.div>
-          ))}
-        </div>
+    <div className="flex flex-col h-full">
+      {/* Legend */}
+      <div className="px-6 py-3 flex items-center gap-6 text-xs font-semibold text-gray-500 shrink-0">
+        <span className="flex items-center gap-2 tracking-wide">
+          <div className="w-3 h-3 rounded-full bg-purple-400 shadow-sm shadow-purple-500/30 ring-2 ring-white" />
+          AUTOMAÇÃO
+        </span>
+        <span className="flex items-center gap-2 tracking-wide">
+          <div className="w-3 h-3 rounded-full bg-blue-400 shadow-sm shadow-blue-500/30 ring-2 ring-white" />
+          LANDING PAGE
+        </span>
       </div>
 
-      <DragOverlay dropAnimation={dropAnimation}>
-        {activeLead && (
-          <div className="rotate-3 scale-105 cursor-grabbing">
-            <GlassPane intensity="high" className="p-4 rounded-2xl shadow-2xl">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-gray-900">{activeLead.name}</h3>
-              </div>
-            </GlassPane>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragEnd={onDragEnd}
+      >
+        <div className="flex-1 overflow-auto">
+          <div className="h-full flex px-6 gap-4 pb-4 min-w-max">
+            {COLUMNS.map((col, index) => (
+              <motion.div
+                key={col.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.3 }}
+                className="h-full"
+              >
+                <KanbanColumn
+                  column={col}
+                  leads={items[col.id]} // Render from local items state!
+                  onLeadClick={onLeadClick}
+                />
+              </motion.div>
+            ))}
           </div>
-        )}
-      </DragOverlay>
-    </DndContext>
+        </div>
+
+        <DragOverlay dropAnimation={dropAnimation}>
+          {activeLead && (
+            <div className="rotate-3 scale-105 cursor-grabbing opacity-90">
+              <GlassPane
+                intensity="high"
+                className={`p-4 rounded-2xl shadow-2xl border-2 ${activeLead.productType === 'Automation'
+                    ? 'border-purple-400 border-solid bg-white/95'
+                    : activeLead.productType === 'Landing Page'
+                      ? 'border-blue-400 border-solid bg-white/95'
+                      : 'border-transparent bg-white/95'
+                  }`}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-gray-900 leading-tight">{activeLead.name}</h3>
+                  </div>
+                  {activeLead.nextAction && (
+                    <div className="w-2 h-2 rounded-full bg-orqio-orange" />
+                  )}
+                </div>
+
+                <div className="flex items-center text-xs text-gray-500 mb-3 gap-1">
+                  <Building2 size={12} />
+                  <span className="truncate max-w-[150px]">{activeLead.company}</span>
+                </div>
+
+                {activeLead.responsibleName && (
+                  <div className="flex items-center text-xs text-orqio-orange mb-3 gap-1 font-medium">
+                    <User size={12} />
+                    <span className="truncate max-w-[150px]">{activeLead.responsibleName}</span>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-gray-100 px-2 py-1 rounded-lg text-gray-600 border border-black/5">
+                    <Phone size={10} /> {activeLead.phone}
+                  </span>
+                  {activeLead.lastInteraction && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-gray-100 px-2 py-1 rounded-lg text-gray-600 border border-black/5">
+                      <Calendar size={10} />
+                      {new Date(activeLead.lastInteraction).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                    </span>
+                  )}
+                </div>
+              </GlassPane>
+            </div>
+          )}
+        </DragOverlay>
+      </DndContext>
+    </div>
   );
 };
